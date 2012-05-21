@@ -23,11 +23,12 @@ def parseLine(line):
 
 class Classifier:
 
-    def __init__(self):
+    def __init__(self, strictLabel=None):
         self.labelWordCount = {}  # the number word occurences in each label (**if a doc contains same word many times, it's only counted ONCE**):   {label : {word: count} }
         self.labelDocid = {} # the docid trained for each label:  {label: set(docids) }
         self.totalDoc = 0
         self.totalVocabulary = set()
+        self.strictLabel = strictLabel
 
 
         
@@ -45,10 +46,7 @@ class Classifier:
     def trainLine(self, line):
         docid, labels, words = parseLine(line)
     
-        if len(labels)>30:
-            print line
-            raise Exception('wrong line')
-            
+           
         if docid:
             self.trainDoc(docid, labels, words)    
                 
@@ -57,6 +55,12 @@ class Classifier:
         label: a string that classifies the current doc
         words: a list of separated words in this doc. (**if a doc contains same word many times, it's only counted ONCE**)
         """
+        
+        if self.strictLabel:
+            if len(labels)>1:
+                return
+            if labels[0] not in self.strictLabel:
+                return
         
         for label in labels:
             if label not in self.labelWordCount:

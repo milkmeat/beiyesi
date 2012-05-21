@@ -1,8 +1,8 @@
 import sys
 import beiyesi.classifier
 
-
-clss = beiyesi.classifier.Classifier()
+strictLabel=['1','2']
+clss = beiyesi.classifier.Classifier(strictLabel=strictLabel)
 clss.train(sys.stdin)
 
 DAT_FILE = 'test.txt'
@@ -13,9 +13,15 @@ for line in open(DAT_FILE):
     docid, labels, words = beiyesi.classifier.parseLine(line)
     #print docid, labels, words
 
+    N = len(labels)    
+    if N>1:
+        continue
+    if labels[0] not in strictLabel:
+        continue
+        
     probs = clss.classifyDoc(words)
     #print probs
-    N = len(labels)
+
     for i in range(0,N):
         if probs[i][0] not in labels:
             wrong+=1
