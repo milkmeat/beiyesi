@@ -23,14 +23,35 @@ def parseLine(line):
 
 class Classifier:
 
-    def __init__(self, strictLabel=None):
+    def __init__(self, strictLabel=None, doubleWord=False):
+        """
+        strictLabel: if provided, the classifier only accepts the test data with just 1 label which is specified by strictLabel (multi-label items are ignored). 
+        doubleWord: generate double word from the original word stream. e.g. a b c -> a, b, a b, c, b c
+        """
         self.labelWordCount = {}  # the number word occurences in each label (**if a doc contains same word many times, it's only counted ONCE**):   {label : {word: count} }
         self.labelDocid = {} # the docid trained for each label:  {label: set(docids) }
         self.totalDoc = 0
         self.totalVocabulary = set()
         self.strictLabel = strictLabel
+        self.doubleWord = doubleWord
 
-
+    def getWordStream(self, words):
+        if not self.doubleWord:
+            for word in set(words):
+                yield word
+            
+        seen=set()
+        prevWord = None
+        for word in words:
+            if not prevWord:
+                yield word
+            else:
+                doubleWord = "%s %s" % (prevWord, word)
+                for w in (word, doubleWord):
+                    if not w in seen:
+                        yield w
+                        seen.add(w)
+                prevWord = word
         
     def train(self, lineStream):
         """
@@ -73,7 +94,7 @@ class Classifier:
         for label in labels:
             self.labelDocid[label].add(docid)
             
-        for word in set(words):     # **if a doc contains same word many times, it's only counted ONCE**
+        for word in self.getWordStream(words):     # **if a doc contains same word many times, it's only counted ONCE**
             for label in labels:
                 self.labelWordCount[label][word]+=1
             self.totalVocabulary.add(word)
@@ -109,24 +130,32 @@ class Classifier:
 
                 
 if __name__=='__main__':
-    clss =  Classifier()
-    clss.train("""
+    trainLineStream1 = """
 1 ham aa bb cc xx
 2 ham bb cc dd yy
 3 ham cc dd aa zz
 4 spam xx yy zz aa
 5 spam yy zz ww bb
 6 spam zz ww xx cc    
-    """.split('\n'))
-    print clss.classifyDoc(['aa','cc'])
+    """.split('\n')
     
     clss =  Classifier()
-    clss.train("""
+    clss.train(trainLineStream1)
+    print clss.classifyDoc(['aa','cc'])
+    
+    
+    trainLineStream2 = """
 1 A,B aa bb cc xx
 2 A bb cc dd yy
 3 B cc dd aa zz
 4 X,Y xx yy zz aa
 5 X yy zz ww bb
 6 Y zz ww xx cc    
-    """.split('\n'))
+    """.split('\n')    
+    clss =  Classifier()
+    clss.train(trainLineStream2)
     print clss.classifyDoc(['aa','cc'])    
+    
+    clss =  Classifier(doubleWord=True)
+    clss.train(trainLineStream2)
+    print clss.classifyDoc(['aa','cc'])     

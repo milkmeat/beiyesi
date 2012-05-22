@@ -1,5 +1,6 @@
 import traceback
 import re
+import sys
 
 #usage: python formatdata.py >training.txt
 # change the 2 filenames below if you want to change the dataset
@@ -35,6 +36,12 @@ def getDoc(docline):
     return docid, docwords
 
 if __name__ == '__main__':
+    if len(sys.argv)<3:
+        print 'usage: python %s <DATA_FILE> <CATEGORY_FILE>" % (sys.argv[0])
+    
+    DATA_FILE = sys.argv[1]
+    CAT_FILE = sys.argv[2]
+        
     with open(DATA_FILE) as datfile:
         with open(CAT_FILE) as catfile:
             while True:
