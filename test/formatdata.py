@@ -37,7 +37,7 @@ def getDoc(docline):
 
 if __name__ == '__main__':
     if len(sys.argv)<3:
-        print 'usage: python %s <DATA_FILE> <CATEGORY_FILE>" % (sys.argv[0])
+        print "usage: python %s <DATA_FILE> <CATEGORY_FILE>" % (sys.argv[0])
     
     DATA_FILE = sys.argv[1]
     CAT_FILE = sys.argv[2]
