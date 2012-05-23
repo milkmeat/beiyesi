@@ -35,24 +35,35 @@ class Classifier:
         self.strictLabel = strictLabel
         self.doubleWord = doubleWord
 
+    def __str__(self):
+        return """
+labelWordCount: %s,
+labelDocid: %s,
+totalDoc: %d,
+totalVocabulary: %s,
+strictLabel: %s,
+doubleWord: %s
+        """ % (self.labelWordCount, self.labelDocid, self.totalDoc, self.totalVocabulary, self.strictLabel, self.doubleWord)
+
+
     def getWordStream(self, words):
         if not self.doubleWord:
             for word in set(words):
                 yield word
+        else:    
+            seen=set()
+            prevWord = None
+            for word in words:
+                if not prevWord:
+                    yield word
+                else:
+                    doubleWord = "%s %s" % (prevWord, word)
+                    for w in (word, doubleWord):
+                        if not w in seen:
+                            yield w
+                            seen.add(w)
+                    prevWord = word
             
-        seen=set()
-        prevWord = None
-        for word in words:
-            if not prevWord:
-                yield word
-            else:
-                doubleWord = "%s %s" % (prevWord, word)
-                for w in (word, doubleWord):
-                    if not w in seen:
-                        yield w
-                        seen.add(w)
-                prevWord = word
-        
     def train(self, lineStream):
         """
         each line in lineStream is a doc in following format
@@ -85,7 +96,7 @@ class Classifier:
         
         for label in labels:
             if label not in self.labelWordCount:
-                self.labelWordCount[label] = collections.defaultdict(lambda: 0)
+                self.labelWordCount[label] = {}
             if label not in self.labelDocid:
                 self.labelDocid[label] = set()       
         if docid in self.labelDocid:
@@ -96,7 +107,7 @@ class Classifier:
             
         for word in self.getWordStream(words):     # **if a doc contains same word many times, it's only counted ONCE**
             for label in labels:
-                self.labelWordCount[label][word]+=1
+                self.labelWordCount[label][word]= self.labelWordCount[label].get(word,0)+1
             self.totalVocabulary.add(word)
         self.totalDoc+=1
             
@@ -106,6 +117,9 @@ class Classifier:
         if docid:
             probabilityPerLabel = self.classifyDoc(words)
             return probabilityPerLabel
+
+    def getLabelWordProbInLabel(self, label, word):
+        return float( self.labelWordCount[label].get(word, 0)+1) / float(len(self.labelDocid[label])+len(self.totalVocabulary))
             
     def classifyDoc(self, words):
         """
@@ -120,16 +134,29 @@ class Classifier:
         probabilityPerLabel = {} #store the final probability for each class label
         for label in self.labelWordCount:
             logProb = 0.0
-            counter = self.labelWordCount[label]
             for word in set(words):
-                logProb += math.log( float(counter.get(word, 0)+1) / float(len(self.labelDocid[label])+len(self.totalVocabulary)) )   # the smoothing here could be wrong??
-            probabilityPerLabel[label] = float(len(self.labelDocid[label]))/float(self.totalDoc) * math.exp(logProb)
+                logProb += math.log( self.getLabelWordProbInLabel(label, word) )   # the smoothing here could be wrong??
+            probabilityPerLabel[label] = float(len(self.labelDocid[label])+len(self.labelDocid))/((self.totalDoc)+len(self.totalVocabulary)*len(self.labelDocid)) * math.exp( logProb )
+
         
         sorted_x = sorted(probabilityPerLabel.iteritems(), key=operator.itemgetter(1), reverse=True)
         return sorted_x
 
                 
 if __name__=='__main__':
+
+    trainLineStream2 = """
+1 A,B aa bb cc xx
+2 A bb cc dd yy
+3 B cc dd aa zz
+4 X,Y xx yy zz aa
+5 X yy zz ww bb
+6 Y zz ww xx cc    
+    """.split('\n')
+    clss =  Classifier()
+    clss.train(trainLineStream2)
+    print clss.classifyDoc(['aa','cc'])
+
     trainLineStream1 = """
 1 ham aa bb cc xx
 2 ham bb cc dd yy
@@ -143,19 +170,4 @@ if __name__=='__main__':
     clss.train(trainLineStream1)
     print clss.classifyDoc(['aa','cc'])
     
-    
-    trainLineStream2 = """
-1 A,B aa bb cc xx
-2 A bb cc dd yy
-3 B cc dd aa zz
-4 X,Y xx yy zz aa
-5 X yy zz ww bb
-6 Y zz ww xx cc    
-    """.split('\n')    
-    clss =  Classifier()
-    clss.train(trainLineStream2)
-    print clss.classifyDoc(['aa','cc'])    
-    
-    clss =  Classifier(doubleWord=True)
-    clss.train(trainLineStream2)
-    print clss.classifyDoc(['aa','cc'])     
+    print clss
