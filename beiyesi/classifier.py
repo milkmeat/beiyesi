@@ -118,9 +118,36 @@ doubleWord: %s
             probabilityPerLabel = self.classifyDoc(words)
             return probabilityPerLabel
 
-    def getLabelWordProbInLabel(self, label, word):
+    def getLabelWordProb(self, label, word):
         return float( self.labelWordCount[label].get(word, 0)+1) / float(len(self.labelDocid[label])+len(self.totalVocabulary))
             
+    def getLabelPriorProb(self, label):
+        return float(len(self.labelDocid[label])+len(self.labelDocid))/((self.totalDoc)+len(self.totalVocabulary)*len(self.labelDocid))
+
+    def getWordsProb4Doc(self, label, words):
+        """ return [(word, prob)], not sorted """
+        result = []
+        for word in self.getWordStream(words):
+            result.append( (word, self.getLabelWordProb(label, word)) )
+        return result
+
+    def getLabelDocProb(self, label, words):
+        logProb = 1
+        for word, prob in self.getWordsProb4Doc(label, words):
+            logProb *= prob    
+        logProb *= self.getLabelPriorProb(label) 
+        return logProb
+
+    def explain(self, label, words):
+        """
+        explain the probability that [words] can be in label,
+        return finalprob, priorProb, [(word, wordProb)...(order from high to low)]
+        """
+        wordsprob = self.getWordsProb4Doc(label, words)
+        wordsprob.sort(lambda a, b: cmp(a[1], b[1]), reverse=True)
+        return self.getLabelDocProb(label, words), self.getLabelPriorProb(label), wordsprob
+
+
     def classifyDoc(self, words):
         """
         return the probability of all labels, sorted from highest to lowest
@@ -133,10 +160,7 @@ doubleWord: %s
             
         probabilityPerLabel = {} #store the final probability for each class label
         for label in self.labelWordCount:
-            logProb = 0.0
-            for word in set(words):
-                logProb += math.log( self.getLabelWordProbInLabel(label, word) )   # the smoothing here could be wrong??
-            probabilityPerLabel[label] = float(len(self.labelDocid[label])+len(self.labelDocid))/((self.totalDoc)+len(self.totalVocabulary)*len(self.labelDocid)) * math.exp( logProb )
+            probabilityPerLabel[label] = self.getLabelDocProb(label, words)
 
         
         sorted_x = sorted(probabilityPerLabel.iteritems(), key=operator.itemgetter(1), reverse=True)
@@ -168,6 +192,10 @@ if __name__=='__main__':
     
     clss =  Classifier()
     clss.train(trainLineStream1)
-    print clss.classifyDoc(['aa','cc'])
+    words = ['aa','cc']
+    print clss.classifyDoc(words)
     
     print clss
+    print 'ham  explained:',clss.explain('ham', words)
+    print 'spam explained', clss.explain('spam', words)
+
