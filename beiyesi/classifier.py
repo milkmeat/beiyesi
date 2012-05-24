@@ -43,8 +43,20 @@ totalDoc: %d,
 totalVocabulary: %s,
 strictLabel: %s,
 doubleWord: %s
-        """ % (self.labelWordCount, self.labelDocid, self.totalDoc, self.totalVocabulary, self.strictLabel, self.doubleWord)
+        """ % (
+        self.labelWordCount, 
+        self.labelDocid, 
+        self.totalDoc, 
+        self.totalVocabulary, 
+        self.strictLabel, 
+        self.doubleWord
+        )
 
+    def shortStr(self):
+        result = ''
+        for k,v in self.labelDocid.iteritems():
+            result+= ','+k+':'+str(len(v))  
+        return result
 
     def getWordStream(self, words):
         if not self.doubleWord:
@@ -55,13 +67,15 @@ doubleWord: %s
             prevWord = None
             for word in words:
                 if not prevWord:
+                    prevWord = word
                     yield word
                 else:
                     doubleWord = "%s %s" % (prevWord, word)
                     for w in (word, doubleWord):
-                        if not w in seen:
-                            yield w
+                        if w not in seen:
+                            print 'yielding',w 
                             seen.add(w)
+                            yield w
                     prevWord = word
             
     def train(self, lineStream):
@@ -194,8 +208,17 @@ if __name__=='__main__':
     clss.train(trainLineStream1)
     words = ['aa','cc']
     print clss.classifyDoc(words)
+    print clss.shortStr()
     
     print clss
     print 'ham  explained:',clss.explain('ham', words)
     print 'spam explained', clss.explain('spam', words)
 
+
+    print '---- test for doubleWord ----'
+    clss =  Classifier(doubleWord=True)
+    clss.train(trainLineStream1)
+    words = ['aa','cc']
+    print clss.classifyDoc(words)
+    print clss.shortStr()
+    print clss
