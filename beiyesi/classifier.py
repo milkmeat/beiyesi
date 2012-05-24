@@ -73,7 +73,6 @@ doubleWord: %s
                     doubleWord = "%s %s" % (prevWord, word)
                     for w in (word, doubleWord):
                         if w not in seen:
-                            print 'yielding',w 
                             seen.add(w)
                             yield w
                     prevWord = word
