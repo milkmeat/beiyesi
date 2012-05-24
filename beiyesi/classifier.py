@@ -55,7 +55,7 @@ doubleWord: %s
     def shortStr(self):
         result = ''
         for k,v in self.labelDocid.iteritems():
-            result+= ','+k+':'+str(len(v))  
+            result+= k+':'+str(len(v))+','
         return result
 
     def getWordStream(self, words):
@@ -131,11 +131,19 @@ doubleWord: %s
             probabilityPerLabel = self.classifyDoc(words)
             return probabilityPerLabel
 
+    def numOfDocInLabel(self, label):
+        return len(self.labelDocid[label])
+
+    def numOfLabel(self):
+        return len(self.labelDocid)
+
     def getLabelWordProb(self, label, word):
-        return float( self.labelWordCount[label].get(word, 0)+1) / float(len(self.labelDocid[label])+len(self.totalVocabulary))
-            
+        return float( self.labelWordCount[label].get(word, 0)+1) / float(self.numOfDocInLabel(label)+len(self.totalVocabulary))
+        #                                                     ^ smoothing                        ^ smoothing
+
     def getLabelPriorProb(self, label):
-        return float(len(self.labelDocid[label])+len(self.labelDocid))/((self.totalDoc)+len(self.totalVocabulary)*len(self.labelDocid))
+        return float(self.numOfDocInLabel(label)+self.numOfLabel() )/((self.totalDoc)+len(self.totalVocabulary)*self.numOfLabel())
+        #                                         ^ smoothing                           ^ smoothing
 
     def getWordsProb4Doc(self, label, words):
         """ return [(word, prob)], not sorted """
