@@ -1,8 +1,7 @@
 import sys
 import beiyesi.classifier
 
-strictLabel=['6','12']
-clss = beiyesi.classifier.Classifier(strictLabel=strictLabel)
+clss = beiyesi.classifier.Classifier()
 
 def removeStopWords(words):
     return filter(lambda x: not x.isupper(), words)
@@ -14,8 +13,8 @@ for line in sys.stdin:
     words = removeStopWords(words)
     clss.trainDoc(docid, labels, words)
 
-print '--- trained result ---'
-print clss.shortStr()
+#print '--- trained result ---'
+#print clss.shortStr()
 
 
 DAT_FILE = 'test.txt'
@@ -30,8 +29,8 @@ for line in open(DAT_FILE):
     N = len(labels)    
     if N>1:
         continue
-    if strictLabel and labels[0] not in strictLabel:
-        continue
+    #if strictLabel and labels[0] not in strictLabel:
+    #    continue
         
     probs = clss.classifyDoc(words)
     #print probs
@@ -39,9 +38,9 @@ for line in open(DAT_FILE):
     for i in range(0,N):
         if probs[i][0] not in labels:
             wrong+=1
-            print '--- explain the error ---'
-            print 'expect: label=%s,docid=%s'%(labels[0],  docid), clss.explain(labels[0],   words)
-            print 'actual: label=%s,docid=%s'%(probs[i][0],docid), clss.explain(probs[i][0], words)
+            #print '--- explain the error ---'
+            #print 'expect: label=%s,docid=%s'%(labels[0],  docid), clss.explain(labels[0],   words)
+            #print 'actual: label=%s,docid=%s'%(probs[i][0],docid), clss.explain(probs[i][0], words)
             continue
     total+=1
 
