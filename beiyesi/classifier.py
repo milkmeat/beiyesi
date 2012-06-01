@@ -153,10 +153,10 @@ doubleWord: %s
         return result
 
     def getLabelDocProb(self, label, words):
-        logProb = 1
+        logProb = 0
         for word, prob in self.getWordsProb4Doc(label, words):
-            logProb *= prob    
-        logProb *= self.getLabelPriorProb(label) 
+            logProb += math.log(prob)    
+        logProb += math.log(self.getLabelPriorProb(label))
         return logProb
 
     def explain(self, label, words):

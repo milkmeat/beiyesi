@@ -62,7 +62,8 @@ I downloaded the test data set from [SIAM2007](http://web.eecs.utk.edu/events/tm
 
 2. Following script converts the data set to our format. Then runs the tests.
 
-    ./run.sh
+    ./run.sh    
+
     total=3083, wrong=2398, score=0.222186
 
 Oops. The classifier isn't performing well. I need your help to improve the classifier.
