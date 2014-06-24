@@ -66,5 +66,5 @@ I downloaded the test data set from [SIAM2007](http://web.eecs.utk.edu/events/tm
 
     total=3083, wrong=2398, score=0.222186
 
-Oops. The classifier isn't performing well. I need your help to improve the classifier.
+It doesn't do well on this data set. But it's still ok for my personal projects. So your miles may very depending on the data you need to process.
     
